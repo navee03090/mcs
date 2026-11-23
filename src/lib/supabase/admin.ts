@@ -1,21 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
-import { getSupabaseUrl } from "@/lib/env";
+import { getSupabaseSecretKey, getSupabaseUrl } from "@/lib/env";
 
 /**
- * Service-role client — SERVER ONLY.
+ * Secret / service-role client — SERVER ONLY.
  * Never import this into Client Components or expose the key.
  */
 export function createAdminClient() {
   const url = getSupabaseUrl();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  const secretKey = getSupabaseSecretKey();
 
-  if (!url || !serviceRoleKey) {
+  if (!url || !secretKey) {
     throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
+      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY / SUPABASE_SERVICE_ROLE_KEY",
     );
   }
 
-  return createClient(url, serviceRoleKey, {
+  return createClient(url, secretKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
