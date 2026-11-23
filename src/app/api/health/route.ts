@@ -14,6 +14,7 @@ export async function GET() {
       supabaseServiceRoleKey: env.supabaseServiceRoleKey,
       geminiApiKey: env.geminiApiKey,
       openaiApiKey: env.openaiApiKey,
+      aiModel: env.aiModel,
     },
   });
 }

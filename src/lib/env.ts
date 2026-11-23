@@ -13,12 +13,30 @@ export function getSupabasePublishableKey() {
   );
 }
 
+export function getSupabaseSecretKey() {
+  return (
+    process.env.SUPABASE_SECRET_KEY ??
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??
+    ""
+  );
+}
+
+export function getAiApiKey() {
+  return (
+    process.env.AI_API_KEY ??
+    process.env.GEMINI_API_KEY ??
+    process.env.OPENAI_API_KEY ??
+    ""
+  );
+}
+
 export function envStatus() {
   return {
     supabaseUrl: Boolean(getSupabaseUrl()),
     supabasePublishableKey: Boolean(getSupabasePublishableKey()),
-    supabaseServiceRoleKey: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-    geminiApiKey: Boolean(process.env.GEMINI_API_KEY),
+    supabaseServiceRoleKey: Boolean(getSupabaseSecretKey()),
+    geminiApiKey: Boolean(getAiApiKey()),
     openaiApiKey: Boolean(process.env.OPENAI_API_KEY),
+    aiModel: process.env.AI_MODEL ?? "gemini-3-8-flash",
   };
 }

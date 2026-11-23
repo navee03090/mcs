@@ -5,9 +5,8 @@ import { useEffect, useState } from "react";
 const checks = [
   ["NEXT_PUBLIC_SUPABASE_URL", "supabaseUrl"],
   ["NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or ANON_KEY)", "supabasePublishableKey"],
-  ["SUPABASE_SERVICE_ROLE_KEY", "supabaseServiceRoleKey"],
-  ["GEMINI_API_KEY", "geminiApiKey"],
-  ["OPENAI_API_KEY (backup)", "openaiApiKey"],
+  ["SUPABASE_SECRET_KEY (or SERVICE_ROLE)", "supabaseServiceRoleKey"],
+  ["AI_API_KEY / GEMINI (Coarena)", "geminiApiKey"],
 ] as const;
 
 type EnvFlags = Record<(typeof checks)[number][1], boolean>;
