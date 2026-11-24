@@ -20,12 +20,12 @@ const COPY: Record<Role, { title: string; line: string; back: string }> = {
   staff: {
     title: "Department desk",
     line: "Your queue is only your department.",
-    back: "Choose the department you serve.",
+    back: "Sign in with your department username.",
   },
   admin: {
     title: "Campus admin",
     line: "Every department, confidential cases, and the trust ledger.",
-    back: "Enter the oversight desk.",
+    back: "Sign in with the campus admin account.",
   },
 };
 
@@ -34,13 +34,18 @@ export function RoleLogin({ role }: { role: Role }) {
   const copy = COPY[role];
   const [users, setUsers] = useState<Profile[]>([]);
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [roll, setRoll] = useState("");
   const [home, setHome] = useState<Department | "">("");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  const credentialDoor = role === "staff" || role === "admin";
+
   useEffect(() => {
+    if (credentialDoor) return;
     void fetch("/api/reportfix/users")
       .then((res) => res.json())
       .then((data: { ok?: boolean; error?: string; users?: Profile[] }) => {
@@ -51,7 +56,34 @@ export function RoleLogin({ role }: { role: Role }) {
         setUsers((data.users ?? []).filter((user) => user.role === role));
       })
       .catch(() => setError("Could not load people"));
-  }, [role]);
+  }, [credentialDoor, role]);
+
+  async function signInWithPassword() {
+    if (!username.trim() || !password) {
+      setError("Enter your username and password.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    const res = await fetch("/api/reportfix/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "credentials",
+        username: username.trim(),
+        password,
+        role,
+      }),
+    });
+    const data = (await res.json()) as { ok?: boolean; error?: string; user?: Profile };
+    setBusy(false);
+    if (!data.ok || !data.user) {
+      setError(data.error || "Those credentials do not match.");
+      return;
+    }
+    writeSession(data.user.id);
+    router.push(deskPath(data.user.role));
+  }
 
   async function enter(userId: string, department?: Department) {
     setBusy(true);
@@ -123,6 +155,42 @@ export function RoleLogin({ role }: { role: Role }) {
           </p>
         )}
 
+        {credentialDoor && (
+          <form
+            className="mt-6 space-y-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void signInWithPassword();
+            }}
+          >
+            <input
+              className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+              placeholder={role === "admin" ? "admin" : "cse"}
+              autoComplete="username"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+            <input
+              className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
+              placeholder="Password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+            {role === "staff" && (
+              <p className="text-xs text-zinc-500">Usernames: cse, ee, is, library, cafeteria, labs.</p>
+            )}
+            <button
+              type="submit"
+              disabled={busy}
+              className="btn rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+            >
+              {busy ? "Checking…" : "Sign in"}
+            </button>
+          </form>
+        )}
+        {!credentialDoor && (
         <ul className="mt-6 space-y-2">
           {users.map((user) => (
             <li key={user.id}>
@@ -172,6 +240,7 @@ export function RoleLogin({ role }: { role: Role }) {
           ))}
           {!users.length && !error && <li className="text-sm text-zinc-500">Loading people…</li>}
         </ul>
+        )}
 
         {role === "student" && (
           <form

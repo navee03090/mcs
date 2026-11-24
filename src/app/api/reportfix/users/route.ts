@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { checkCredentials } from "@/lib/reportfix/credentials";
 import { createStudent, ensureSeeded, listProfiles, noteSignIn } from "@/lib/reportfix/store";
+import type { Role } from "@/lib/reportfix/types";
 
 export async function GET() {
   try {
@@ -23,7 +25,18 @@ export async function POST(request: Request) {
       department?: string;
       action?: string;
       userId?: string;
+      username?: string;
+      password?: string;
+      role?: Role;
     };
+    if (body.action === "credentials") {
+      const checked = checkCredentials(body.username ?? "", body.password ?? "", body.role ?? "student");
+      if (!checked.ok) {
+        return NextResponse.json({ ok: false, error: checked.error }, { status: checked.status });
+      }
+      const user = await noteSignIn(checked.userId);
+      return NextResponse.json({ ok: true, user });
+    }
     if (body.action === "sign-in") {
       if (!body.userId) {
         return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
