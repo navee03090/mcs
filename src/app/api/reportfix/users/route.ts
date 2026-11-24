@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       name?: string;
       rollNumber?: string;
+      department?: string;
       action?: string;
       userId?: string;
     };
@@ -27,15 +28,14 @@ export async function POST(request: Request) {
       if (!body.userId) {
         return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
       }
-      const user = await noteSignIn(body.userId);
+      const user = await noteSignIn(body.userId, body.department);
       return NextResponse.json({ ok: true, user });
     }
-    const user = await createStudent(body.name ?? "", body.rollNumber);
+    const user = await createStudent(body.name ?? "", body.rollNumber, body.department);
     return NextResponse.json({ ok: true, user });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "Failed" },
-      { status: 500 },
-    );
+    const message = error instanceof Error ? error.message : "Failed";
+    const status = message.startsWith("Choose") || message === "Unknown user" ? 400 : 500;
+    return NextResponse.json({ ok: false, error: message }, { status });
   }
 }

@@ -6,14 +6,16 @@ import { useEffect, useState } from "react";
 import { McsMark } from "@/components/brand/McsMark";
 import { deskPath } from "@/lib/portal";
 import { writeSession } from "@/lib/session";
-import type { Profile, Role } from "@/lib/reportfix/types";
+import type { Department, Profile, Role } from "@/lib/reportfix/types";
+
+const STUDENT_HOMES: Department[] = ["EE", "CSE", "IS"];
 import { CampusStage } from "./campus-stage";
 
 const COPY: Record<Role, { title: string; line: string; back: string }> = {
   student: {
     title: "Student desk",
     line: "Report a problem, watch it move, and confirm the fix.",
-    back: "Sign in with your name, or create a student record.",
+    back: "Sign in with your name and your department.",
   },
   staff: {
     title: "Department desk",
@@ -33,6 +35,8 @@ export function RoleLogin({ role }: { role: Role }) {
   const [users, setUsers] = useState<Profile[]>([]);
   const [name, setName] = useState("");
   const [roll, setRoll] = useState("");
+  const [home, setHome] = useState<Department | "">("");
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -49,13 +53,13 @@ export function RoleLogin({ role }: { role: Role }) {
       .catch(() => setError("Could not load people"));
   }, [role]);
 
-  async function enter(userId: string) {
+  async function enter(userId: string, department?: Department) {
     setBusy(true);
     setError(null);
     const res = await fetch("/api/reportfix/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "sign-in", userId }),
+      body: JSON.stringify({ action: "sign-in", userId, department }),
     });
     const data = (await res.json()) as { ok?: boolean; error?: string; user?: Profile };
     setBusy(false);
@@ -72,12 +76,16 @@ export function RoleLogin({ role }: { role: Role }) {
       setError("Enter your name.");
       return;
     }
+    if (!home) {
+      setError("Choose EE, CSE, or IS.");
+      return;
+    }
     setBusy(true);
     setError(null);
     const res = await fetch("/api/reportfix/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), rollNumber: roll.trim() }),
+      body: JSON.stringify({ name: name.trim(), rollNumber: roll.trim(), department: home }),
     });
     const data = (await res.json()) as { ok?: boolean; error?: string; user?: Profile };
     setBusy(false);
@@ -121,18 +129,45 @@ export function RoleLogin({ role }: { role: Role }) {
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => void enter(user.id)}
+                onClick={() => {
+                  if (role === "student" && !user.department) {
+                    setPendingId(user.id);
+                    setError(null);
+                    return;
+                  }
+                  void enter(user.id);
+                }}
                 className="btn flex w-full items-center justify-between rounded-2xl border border-black/10 bg-white px-4 py-3 text-left"
               >
                 <span>
                   <span className="block font-semibold">{user.name}</span>
                   <span className="text-xs text-zinc-500">
-                    {user.department ? user.department : user.roll_number ? `Roll ${user.roll_number}` : "Trust"} ·{" "}
-                    {user.trust_score}
+                    {user.department
+                      ? user.department
+                      : role === "student"
+                        ? "Choose a department"
+                        : "Trust"}{" "}
+                    · {user.trust_score}
                   </span>
                 </span>
                 <span className="text-sm font-semibold text-[var(--brand)]">Enter</span>
               </button>
+              {pendingId === user.id && !user.department && (
+                <div className="mt-2 flex flex-wrap items-center gap-2 px-1">
+                  <span className="text-xs text-zinc-600">Which department?</span>
+                  {STUDENT_HOMES.map((dept) => (
+                    <button
+                      key={dept}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void enter(user.id, dept)}
+                      className="btn rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold"
+                    >
+                      {dept}
+                    </button>
+                  ))}
+                </div>
+              )}
             </li>
           ))}
           {!users.length && !error && <li className="text-sm text-zinc-500">Loading people…</li>}
@@ -159,6 +194,18 @@ export function RoleLogin({ role }: { role: Role }) {
               value={roll}
               onChange={(event) => setRoll(event.target.value)}
             />
+            <div className="flex flex-wrap gap-2">
+              {STUDENT_HOMES.map((dept) => (
+                <button
+                  key={dept}
+                  type="button"
+                  onClick={() => setHome(dept)}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold ${home === dept ? "border-[var(--brand)] bg-[var(--brand-soft)]" : "border-black/10 bg-white"}`}
+                >
+                  {dept}
+                </button>
+              ))}
+            </div>
             <button
               type="submit"
               disabled={busy}

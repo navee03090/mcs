@@ -10,6 +10,7 @@ import {
 import { canSee, presentIssue, presentReport } from "./permissions";
 import { sameProblem, triageReport } from "./triage";
 import type {
+  Department,
   Issue,
   IssueStatus,
   IssueVote,
@@ -17,6 +18,11 @@ import type {
   Report,
   TrustEvent,
 } from "./types";
+
+function studentHome(value?: string): Department | null {
+  if (value === "EE" || value === "CSE" || value === "IS") return value;
+  return null;
+}
 
 function reportersOf(state: { profiles: Profile[] }, ids: string[]) {
   return ids
@@ -70,13 +76,13 @@ export async function listLedger(profileId?: string) {
   return state.trust_events.filter((e) => !profileId || e.profile_id === profileId);
 }
 
-export async function createStudent(name: string, rollNumber?: string) {
+export async function createStudent(name: string, rollNumber?: string, department?: string) {
   return withState((state) => {
     const profile: Profile = {
       id: randomUUID(),
       name: name.trim() || `Student ${Date.now().toString().slice(-4)}`,
       role: "student",
-      department: null,
+      department: studentHome(department),
       trust_score: 50,
       trust_reason: "New account — base trust 50",
       created_at: new Date().toISOString(),
@@ -96,10 +102,15 @@ export async function createStudent(name: string, rollNumber?: string) {
   });
 }
 
-export async function noteSignIn(userId: string) {
+export async function noteSignIn(userId: string, department?: string) {
   return withState((state) => {
     const profile = state.profiles.find((item) => item.id === userId);
     if (!profile) throw new Error("Unknown user");
+    if (profile.role === "student" && !profile.department) {
+      const home = studentHome(department);
+      if (!home) throw new Error("Choose EE, CSE, or IS");
+      profile.department = home;
+    }
     profile.last_seen_at = new Date().toISOString();
     return profile;
   });
