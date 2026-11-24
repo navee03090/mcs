@@ -1,12 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Issue, IssueStatus, Profile, Report } from "@/lib/reportfix/types";
+import type {
+  CampusLocation,
+  Issue,
+  IssueStatus,
+  Profile,
+  Report,
+  TrustEvent,
+} from "@/lib/reportfix/types";
 
 type Board = {
   viewer: Profile;
   issues: Issue[];
   reports: Report[];
+  locations: CampusLocation[];
+  ledger: TrustEvent[];
+  confidential: Issue[];
 };
 
 const STATUS_OPTIONS: IssueStatus[] = [
@@ -26,6 +36,7 @@ export function ReportFixApp() {
   const [setupError, setSetupError] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
+  const [locationId, setLocationId] = useState("");
 
   const viewer = board?.viewer ?? users.find((u) => u.id === userId) ?? null;
 
@@ -48,8 +59,21 @@ export function ReportFixApp() {
       setMsg(data.error);
       return;
     }
-    setBoard({ viewer: data.viewer, issues: data.issues, reports: data.reports });
+    setBoard({
+      viewer: data.viewer,
+      issues: data.issues,
+      reports: (data.reports ?? []).filter((r: Report) => !r.is_confidential),
+      locations: data.locations ?? [],
+      ledger: data.ledger ?? [],
+      confidential: data.confidential ?? [],
+    });
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    const timer = setInterval(() => void loadBoard(userId), 4000);
+    return () => clearInterval(timer);
+  }, [userId, loadBoard]);
 
   useEffect(() => {
     void loadUsers();
@@ -123,7 +147,11 @@ export function ReportFixApp() {
     const res = await fetch("/api/reportfix/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, text }),
+      body: JSON.stringify({
+        userId,
+        text: text.slice(0, 1000),
+        locationId: locationId || undefined,
+      }),
     });
     const data = await res.json();
     setBusy(false);
@@ -133,6 +161,8 @@ export function ReportFixApp() {
     }
     if (data.report?.needs_clarification) {
       setMsg(`Needs clarification: ${data.report.clarification_question}`);
+      await loadBoard(userId);
+      return;
     } else if (data.grouped) {
       setMsg(`Joined existing issue (+me too). Priority ${data.issue.priority}`);
     } else if (data.issue?.is_confidential) {
@@ -141,7 +171,21 @@ export function ReportFixApp() {
       setMsg(`Routed to ${data.issue.department} · ${data.issue.priority}`);
     }
     setText("");
+    setLocationId("");
     await loadBoard(userId);
+  }
+
+  async function staffAction(issueId: string, action: "spam" | "close_window") {
+    setBusy(true);
+    const res = await fetch("/api/reportfix/issues", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, issueId, action }),
+    });
+    const data = await res.json();
+    setBusy(false);
+    setMsg(data.ok ? action : data.error);
+    if (userId) await loadBoard(userId);
   }
 
   async function setStatus(issueId: string, status: IssueStatus) {
@@ -293,9 +337,25 @@ export function ReportFixApp() {
               <textarea
                 className="min-h-28 w-full rounded-lg border border-zinc-300 p-3 text-sm"
                 placeholder="English / Roman Urdu ok — e.g. CSE Lab 3 ka projector band hai"
+                maxLength={1000}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
               />
+              <label className="mt-2 block text-xs text-zinc-600">
+                Location if asked{" "}
+                <select
+                  className="ml-1 rounded border border-zinc-300 bg-white px-2 py-1"
+                  value={locationId}
+                  onChange={(e) => setLocationId(e.target.value)}
+                >
+                  <option value="">Not sure yet</option>
+                  {(board?.locations ?? []).map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <button
                 type="button"
                 onClick={() => void submit()}
@@ -354,8 +414,31 @@ export function ReportFixApp() {
                         {Math.round(issue.crowd_weight)}
                       </p>
                       <p className="text-xs text-zinc-500">{issue.priority_reason}</p>
+                      <p className="text-xs text-zinc-700">{issue.priority_explanation}</p>
+                      {issue.tally && (
+                        <p className="text-xs text-zinc-700">Tally: {issue.tally}</p>
+                      )}
+                      {issue.injection && (
+                        <p className="text-xs text-red-700">Injection flagged — command ignored</p>
+                      )}
+                      {issue.brigade_flag && (
+                        <p className="text-xs text-amber-800">{issue.brigade_reason}</p>
+                      )}
+                      {issue.is_confidential && (
+                        <p className="text-xs text-red-700">Anonymous reporter</p>
+                      )}
                     </div>
                   </div>
+                  {(viewer?.role === "admin" || viewer?.role === "staff") && (
+                    <details className="mt-2 text-xs">
+                      <summary>Triage debug</summary>
+                      <p>Rules: {(issue.rules_fired ?? []).join(", ") || "—"}</p>
+                      <p>
+                        Base {issue.base_priority} → final {issue.priority}. Crowd{" "}
+                        {issue.crowd_score}.
+                      </p>
+                    </details>
+                  )}
 
                   {(viewer?.role === "staff" || viewer?.role === "admin") && (
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -363,13 +446,29 @@ export function ReportFixApp() {
                         <button
                           key={s}
                           type="button"
-                          disabled={busy}
+                          disabled={busy || issue.is_confidential}
                           onClick={() => void setStatus(issue.id, s)}
                           className="rounded border border-zinc-300 px-2 py-0.5 text-xs"
                         >
                           {s}
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void staffAction(issue.id, "spam")}
+                        className="rounded border border-red-300 px-2 py-0.5 text-xs"
+                      >
+                        Mark invalid/spam
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void staffAction(issue.id, "close_window")}
+                        className="rounded border border-zinc-300 px-2 py-0.5 text-xs"
+                      >
+                        Close verification
+                      </button>
                     </div>
                   )}
 
@@ -420,7 +519,10 @@ export function ReportFixApp() {
           <div className="rounded-xl border border-zinc-200 p-4">
             <h2 className="mb-2 font-semibold">Recent reports</h2>
             <ul className="space-y-2 text-xs text-zinc-700">
-              {(board?.reports ?? []).slice(0, 8).map((r) => (
+              {(board?.reports ?? [])
+                .filter((r) => !r.is_confidential)
+                .slice(0, 8)
+                .map((r) => (
                 <li key={r.id} className="rounded bg-zinc-50 p-2">
                   <p className="font-medium">{r.raw_text}</p>
                   <p className="text-zinc-500">
@@ -432,6 +534,29 @@ export function ReportFixApp() {
               ))}
             </ul>
           </div>
+
+          {viewer?.role === "admin" && (
+            <div className="rounded-xl border border-red-200 p-4 text-xs">
+              <h2 className="mb-2 font-semibold">Confidential queue</h2>
+              <ul className="space-y-1">
+                {(board?.confidential ?? []).map((issue) => (
+                  <li key={issue.id}>
+                    {issue.title} · Anonymous reporter · {issue.priority}
+                  </li>
+                ))}
+                {!board?.confidential?.length && <li>None</li>}
+              </ul>
+              <h2 className="mb-1 mt-3 font-semibold">Trust ledger</h2>
+              <ul className="max-h-40 space-y-1 overflow-auto">
+                {(board?.ledger ?? []).slice(0, 12).map((event) => (
+                  <li key={event.id}>
+                    {event.delta > 0 ? "+" : ""}
+                    {event.delta} · {event.reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="rounded-xl border border-dashed border-zinc-300 p-4 text-xs text-zinc-600">
             <p className="font-semibold text-zinc-800">Demo attacks to try</p>

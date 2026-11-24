@@ -30,15 +30,18 @@ export async function runGeminiText(params: {
   const client = createAiClient();
   const { model } = getAiConfig();
 
-  const completion = await client.chat.completions.create({
-    model,
-    messages: [
-      ...(params.system
-        ? [{ role: "system" as const, content: params.system }]
-        : []),
-      { role: "user" as const, content: params.prompt },
-    ],
-  });
+  const completion = await client.chat.completions.create(
+    {
+      model,
+      messages: [
+        ...(params.system
+          ? [{ role: "system" as const, content: params.system }]
+          : []),
+        { role: "user" as const, content: params.prompt },
+      ],
+    },
+    { signal: AbortSignal.timeout(8000) },
+  );
 
   return {
     model,

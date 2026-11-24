@@ -21,7 +21,7 @@ export const SEED_PROFILES: Profile[] = [
     department: null,
     trust_score: 62,
     trust_reason: "Accurate reports in past",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "11111111-1111-1111-1111-111111111102",
@@ -30,7 +30,7 @@ export const SEED_PROFILES: Profile[] = [
     department: null,
     trust_score: 48,
     trust_reason: "New-ish account",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "11111111-1111-1111-1111-111111111103",
@@ -39,7 +39,7 @@ export const SEED_PROFILES: Profile[] = [
     department: null,
     trust_score: 35,
     trust_reason: "One disputed false report",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "22222222-2222-2222-2222-222222222201",
@@ -48,7 +48,7 @@ export const SEED_PROFILES: Profile[] = [
     department: "CSE",
     trust_score: 70,
     trust_reason: "Department staff",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "22222222-2222-2222-2222-222222222202",
@@ -57,7 +57,7 @@ export const SEED_PROFILES: Profile[] = [
     department: "EE",
     trust_score: 70,
     trust_reason: "Department staff",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "22222222-2222-2222-2222-222222222203",
@@ -66,7 +66,7 @@ export const SEED_PROFILES: Profile[] = [
     department: "Library",
     trust_score: 70,
     trust_reason: "Department staff",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "22222222-2222-2222-2222-222222222204",
@@ -75,7 +75,7 @@ export const SEED_PROFILES: Profile[] = [
     department: "Cafeteria",
     trust_score: 70,
     trust_reason: "Department staff",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "22222222-2222-2222-2222-222222222205",
@@ -84,7 +84,7 @@ export const SEED_PROFILES: Profile[] = [
     department: "IS",
     trust_score: 70,
     trust_reason: "Department staff",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "22222222-2222-2222-2222-222222222206",
@@ -93,7 +93,7 @@ export const SEED_PROFILES: Profile[] = [
     department: "Labs",
     trust_score: 70,
     trust_reason: "Department staff",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
   {
     id: "33333333-3333-3333-3333-333333333301",
@@ -102,6 +102,6 @@ export const SEED_PROFILES: Profile[] = [
     department: null,
     trust_score: 90,
     trust_reason: "Admin account",
-    created_at: new Date().toISOString(),
+    created_at: "2025-10-01T00:00:00.000Z",
   },
 ];

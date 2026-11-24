@@ -47,8 +47,18 @@ export type Issue = {
   status: IssueStatus;
   me_too_count: number;
   crowd_weight: number;
+  crowd_score: number;
+  base_priority: Priority;
+  priority_explanation: string;
+  category: string;
   is_confidential: boolean;
   reporter_ids: string[];
+  rules_fired: string[];
+  injection: boolean;
+  tally: string;
+  verification_open: boolean;
+  brigade_flag: boolean;
+  brigade_reason: string;
   created_at: string;
   updated_at: string;
 };
@@ -66,6 +76,7 @@ export type Report = {
   is_confidential: boolean;
   needs_clarification: boolean;
   clarification_question: string | null;
+  injection: boolean;
   created_at: string;
 };
 
@@ -82,6 +93,7 @@ export type TrustEvent = {
   profile_id: string;
   delta: number;
   reason: string;
+  issue_id: string | null;
   created_at: string;
 };
 
@@ -99,4 +111,8 @@ export type TriageResult = {
   needs_clarification: boolean;
   clarification_question: string | null;
   category: string;
+  base_priority: Priority;
+  injection: boolean;
+  rules_fired: string[];
+  crowd_score: number;
 };

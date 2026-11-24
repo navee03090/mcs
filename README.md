@@ -1,53 +1,57 @@
-# CodeQuest AI — empty shell
+# ReportFix — CodeQuest 2026
 
-Next.js + Supabase + Vercel starter for **CodeQuest 2026 Module 02 (AI Hackathon)**.
+Campus issue reporting for the AI module. Students report in English or Roman Urdu, code routes the issue, departments act, and the people affected confirm whether the fix is real.
 
-No product features. Build the real solution only after the problem statement drops.
+Live app: https://mcs-pied.vercel.app/
 
-## Stack
-
-| Layer | Tech |
-| --- | --- |
-| Frontend / API | Next.js 16 (App Router) |
-| DB / Auth / Storage | Supabase |
-| Deploy | Vercel ← GitHub |
-| AI | Gemini (primary) + OpenAI (backup) via `POST /api/ai` |
-
-## Setup (tonight)
-
-1. Create a **private** GitHub repo and push this folder.
-2. Create a Supabase project → copy URL + keys into `.env.local`.
-3. Get a [Gemini API key](https://aistudio.google.com/apikey) (and optional OpenAI backup).
-4. Import the GitHub repo in Vercel → add the same env vars → Deploy.
-5. Confirm `https://YOUR_APP.vercel.app/api/health` returns `"ok": true`.
+## Run
 
 ```bash
 cp .env.example .env.local
 npm install
 npm run dev
+npm run test:attack
+npm run build
 ```
 
-## Team roles
+`npm run test:attack` uses an in-memory store and the deterministic rule engine. It does not call the model or the production bucket.
 
-| Role | Owns |
-| --- | --- |
-| A · AI / Product | Prompt design, model IO, impact story |
-| B · Full-stack | API routes, Supabase schema, deploy |
-| C · UX / Pitch | UI polish, 4-min demo script, Q&A |
+## Env
 
-## Day-of rules reminder
+See `.env.example`.
 
-- Core code must be written during the hackathon window.
-- Open-source frameworks, pretrained weights, and public APIs are allowed with attribution.
-- Do not recycle a past competition project or commercial template.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY` (server only — state is stored in a private Storage bucket)
+- `AI_BASE_URL`, `AI_API_KEY`, `AI_MODEL` (optional summary. Decisions do not depend on it.)
 
-## Useful paths
+## What works
 
-- `src/lib/supabase/` — browser, server, admin, session proxy clients
-- `src/app/api/health` — env readiness JSON
-- `src/app/api/ai` — empty AI route to wire at kickoff
-- Portal login: https://codequest26.vercel.app/portal/ai-26
+- Judge bar: switch user, create a student (trust starts at 50), reset to the seeded campus
+- Report → department, location, priority, one-line reason
+- Same problem at the same place merges; WiFi and AC at one lab stay separate
+- Safety lexicon (English + Roman Urdu) is always critical
+- Caps, "urgent", and instructions inside a report do not change priority
+- Unknown places ask for a location instead of guessing
+- Harassment stays confidential, anonymous, and off staff queues and public lists
+- Affected students confirm or dispute a resolution; the tally is shown
+- Trust ledger, crowd bump only at 3+ people, brigading flag for brand-new accounts
 
-## Demo target (4 min)
+## What AI does vs what code does
 
-1. Problem (20s) → 2. Live click-through (2 min) → 3. AI architecture (45s) → 4. Impact (30s)
+The model may only propose a short summary. It has no write access.
+
+Code decides priority, the safety override, tone immunity, confidentiality, whether the location exists, who can see an issue, vote weight, trust changes, crowd bumps, reopen, and brigading.
+
+If the key is missing, the call exceeds 8 seconds, or the JSON is invalid, the rule engine still returns a result.
+
+## Storage
+
+State is a JSON file in Supabase Storage (`reportfix/state.json`), not a file on the Vercel machine. Reset replaces that object with the seed (admin, six staff, three students, two sample issues).
+
+## Known limits
+
+- Grouping uses the problem category plus the canonical location, not a second model call.
+- Urdu script (not Roman Urdu) asks for clarification instead of being translated.
+- One shared state file, so two writes at the same instant can overwrite each other.
+- Visual design is plain on purpose.
