@@ -169,17 +169,19 @@ export function ReportFixApp({ desk }: { desk: Desk }) {
     setMsg(`Created ${data.user.name}`);
   }
 
-  async function submit() {
+  async function submit(placeId?: string) {
+    const chosen = placeId ?? locationId;
     if (!userId || !text.trim()) return;
     setBusy(true);
     setMsg(null);
+    if (placeId) setLocationId(placeId);
     const res = await fetch("/api/reportfix/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId,
         text: text.slice(0, 1000),
-        locationId: locationId || undefined,
+        locationId: chosen || undefined,
       }),
     });
     const data = await res.json();
@@ -308,7 +310,7 @@ export function ReportFixApp({ desk }: { desk: Desk }) {
         showTriage={showTriage}
         resetData={() => void resetData()}
         createUser={() => void createUser()}
-        submit={() => void submit()}
+        submit={(placeId) => void submit(placeId)}
         staffAction={(id, action) => void staffAction(id, action)}
         setStatus={(id, status) => void setStatus(id, status)}
         vote={(id, choice) => void vote(id, choice)}
@@ -340,7 +342,7 @@ export function ReportFixApp({ desk }: { desk: Desk }) {
     trending,
     needsPlace,
     showTriage,
-    submit: () => void submit(),
+    submit: (placeId) => void submit(placeId),
     staffAction: (id, action) => void staffAction(id, action),
     setStatus: (id, status) => void setStatus(id, status),
     vote: (id, choice) => void vote(id, choice),

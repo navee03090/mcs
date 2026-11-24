@@ -38,15 +38,46 @@ export function boundReport(input: string) {
   return clean.length <= 5000 ? clean : `${head} ${tail}`;
 }
 
+function hasWord(text: string, words: string[]) {
+  const normalized = normalizeText(text);
+  return words.some((word) => {
+    if (/[^\u0000-\u007f]/.test(word)) return text.includes(word);
+    return new RegExp(`(?:^|\\s)${word}(?:\\s|$)`, "i").test(normalized);
+  });
+}
+
 export function detectCategory(text: string): Category {
   const t = normalizeText(text);
-  if (HARASS.test(text) || HARASS.test(t)) return "harassment";
-  if (/\b(projector|proj|screen)\b/.test(t)) return "projector";
-  if (/\b(wifi|wi fi|internet|net)\b/.test(t)) return "wifi";
-  if (/\b(ac|air condition\w*|cooling|cooler)\b/.test(t)) return "ac";
-  if (/\b(outlet|socket|spark|wiring|bijli)\b/.test(t)) return "power";
-  if (/\b(sink|clog\w*|drain|tap|pani)\b/.test(t)) return "plumbing";
-  if (/\b(food|khana|meal)\b/.test(t)) return "food";
+  if (HARASS.test(text) || HARASS.test(t) || hasWord(text, ["ریگنگ", "دھمکی", "ہراسانی"])) {
+    return "harassment";
+  }
+  if (
+    /\b(projector|proj|screen)\b/.test(t) ||
+    hasWord(text, ["display", "proyektor", "پروجیکٹر"])
+  ) {
+    return "projector";
+  }
+  if (/\b(wifi|wi fi|internet|net)\b/.test(t) || hasWord(text, ["wlan", "انٹرنیٹ"])) {
+    return "wifi";
+  }
+  if (
+    /\b(ac|air condition\w*|cooling|cooler)\b/.test(t) ||
+    hasWord(text, ["pankha", "fan", "hawa", "thandi", "پنکھا", "اے سی"])
+  ) {
+    return "ac";
+  }
+  if (
+    /\b(outlet|socket|spark|wiring|bijli)\b/.test(t) ||
+    hasWord(text, ["bulb", "tube light", "tubelight", "batti", "lights?", "بلب"])
+  ) {
+    return "power";
+  }
+  if (/\b(sink|clog\w*|drain|tap|pani)\b/.test(t) || hasWord(text, ["nal", "nalka", "nalke"])) {
+    return "plumbing";
+  }
+  if (/\b(food|khana|meal)\b/.test(t) || hasWord(text, ["nashta", "chai", "کھانا"])) {
+    return "food";
+  }
   return "other";
 }
 
@@ -130,7 +161,9 @@ export function decideReport(rawInput: string, locationOverride?: string | null)
   const injection = INJECTION.test(raw);
   if (injection) rules.push("injection-ignored");
 
-  const safety = SAFETY.test(raw);
+  const safety =
+    SAFETY.test(raw) ||
+    hasWord(raw, ["jhatka", "dhuwan", "dhuaan", "آگ", "دھواں", "چنگاری", "بےہوش", "زخمی"]);
   if (safety) rules.push("safety-critical");
 
   const harassment = HARASS.test(raw);

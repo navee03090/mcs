@@ -60,7 +60,11 @@ export function StudentDesk(props: DeskProps) {
               <select
                 className="ml-1 rounded-lg border border-black/10 bg-white px-2 py-1"
                 value={props.locationId}
-                onChange={(event) => props.setLocationId(event.target.value)}
+                onChange={(event) => {
+                  const placeId = event.target.value;
+                  props.setLocationId(placeId);
+                  if (props.needsPlace && placeId) props.submit(placeId);
+                }}
               >
                 <option value="">Not sure yet</option>
                 {(board?.locations ?? []).map((loc) => (
@@ -77,7 +81,8 @@ export function StudentDesk(props: DeskProps) {
                   <button
                     key={loc.id}
                     type="button"
-                    onClick={() => props.setLocationId(loc.id)}
+                    onClick={() => props.submit(loc.id)}
+                    disabled={props.busy}
                     className={`rounded-full border px-3 py-1 text-xs ${props.locationId === loc.id ? "border-[var(--brand)] bg-[var(--brand-soft)]" : "border-black/10 bg-white"}`}
                   >
                     {loc.name}

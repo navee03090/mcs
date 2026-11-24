@@ -64,7 +64,7 @@ export function ReportFixView(props: {
   showTriage: boolean;
   resetData: () => void;
   createUser: () => void;
-  submit: () => void;
+  submit: (placeId?: string) => void;
   staffAction: (issueId: string, action: "spam" | "close_window") => void;
   setStatus: (issueId: string, status: IssueStatus) => void;
   vote: (issueId: string, vote: "confirm" | "dispute") => void;
@@ -200,7 +200,11 @@ export function ReportFixView(props: {
                 <select
                   className="ml-1 rounded-lg border border-black/10 bg-white px-2 py-1"
                   value={locationId}
-                  onChange={(e) => setLocationId(e.target.value)}
+                  onChange={(e) => {
+                    const placeId = e.target.value;
+                    setLocationId(placeId);
+                    if (needsPlace && placeId) submit(placeId);
+                  }}
                 >
                   <option value="">Not sure yet</option>
                   {(board?.locations ?? []).map((loc) => (
@@ -221,7 +225,8 @@ export function ReportFixView(props: {
                     <button
                       key={loc.id}
                       type="button"
-                      onClick={() => setLocationId(loc.id)}
+                      onClick={() => submit(loc.id)}
+                      disabled={busy}
                       className={`rounded-full border px-3 py-1 text-xs ${locationId === loc.id ? "border-[var(--brand)] bg-[var(--brand-soft)]" : "border-black/10 bg-white"}`}
                     >
                       {loc.name}
@@ -291,6 +296,9 @@ export function ReportFixView(props: {
                             <span className="text-xs text-[var(--brand)]">Anonymous and confidential</span>
                           )}
                         </p>
+                        {issue.priority_explanation && (
+                          <p className="mt-1 text-xs font-medium text-[#140c0c]">{issue.priority_explanation}</p>
+                        )}
                         <p className="text-zinc-600">{issue.canonical_summary}</p>
                         <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
                           <span>{issue.department}</span>
@@ -309,7 +317,6 @@ export function ReportFixView(props: {
                           />
                         </div>
                         <p className="mt-1 text-xs text-zinc-500">{issue.priority_reason}</p>
-                        <p className="text-xs text-zinc-700">{issue.priority_explanation}</p>
                         {issue.tally && <p className="text-xs text-zinc-700">Tally: {issue.tally}</p>}
                         {issue.injection && (
                           <p className="text-xs font-medium text-[var(--brand)]">

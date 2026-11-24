@@ -31,7 +31,7 @@ export type DeskProps = {
   trending: Issue[];
   needsPlace: boolean;
   showTriage: boolean;
-  submit: () => void;
+  submit: (placeId?: string) => void;
   staffAction: (issueId: string, action: "spam" | "close_window") => void;
   setStatus: (issueId: string, status: IssueStatus) => void;
   vote: (issueId: string, vote: "confirm" | "dispute") => void;

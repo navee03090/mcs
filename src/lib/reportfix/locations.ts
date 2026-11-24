@@ -43,14 +43,14 @@ export const CAMPUS_PLACES: CampusPlace[] = [
     name: "Central Library",
     building: "Library",
     department_hint: "Library",
-    aliases: ["central library", "library", "lib"],
+    aliases: ["central library", "library", "lib", "لائبریری"],
   },
   {
     id: "cafeteria",
     name: "Main Cafeteria",
     building: "Student Center",
     department_hint: "Cafeteria",
-    aliases: ["main cafeteria", "cafeteria", "canteen", "cafe"],
+    aliases: ["main cafeteria", "cafeteria", "canteen", "cafe", "کینٹین"],
   },
   {
     id: "is-lab",
@@ -71,7 +71,7 @@ export const CAMPUS_PLACES: CampusPlace[] = [
     name: "Hostel A",
     building: "Hostels",
     department_hint: null,
-    aliases: ["hostel a", "hostel-a", "hostel"],
+    aliases: ["hostel a", "hostel-a", "hostel", "ہاسٹل"],
   },
   {
     id: "auditorium",

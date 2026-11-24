@@ -76,6 +76,9 @@ export function IssueCard({
               {liveLabel(issue)}
             </span>
           </div>
+          {issue.priority_explanation && (
+            <p className="mt-1 text-xs font-medium text-[#140c0c]">{issue.priority_explanation}</p>
+          )}
           <p className="text-zinc-600">{issue.canonical_summary}</p>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
             <span>{issue.department}</span>
@@ -95,7 +98,6 @@ export function IssueCard({
               style={{ width: `${Math.min(100, (issue.crowd_score / 6) * 100)}%` }}
             />
           </div>
-          <p className="mt-1 text-xs text-zinc-700">{issue.priority_explanation}</p>
           {issue.tally && <p className="text-xs text-zinc-700">Tally: {issue.tally}</p>}
           {issue.injection && (
             <p className="text-xs font-medium text-[var(--brand)]">Injection flagged — command ignored</p>
