@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReportFix · CodeQuest 2026",
-  description: "Campus issue reporting with AI triage — CodeQuest AI Hackathon",
+  title: "ReportFix · MCS",
+  description: "Campus issue reporting for Military College of Signals — CodeQuest 2026",
+  icons: { icon: "/brand/mcs-logo.png", apple: "/brand/mcs-logo.png" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-white text-zinc-950">{children}</body>
+      <body className="min-h-full bg-[var(--background)] text-[var(--foreground)]">{children}</body>
     </html>
   );
 }

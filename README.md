@@ -49,6 +49,17 @@ If the key is missing, the call exceeds 8 seconds, or the JSON is invalid, the r
 
 State is a JSON file in Supabase Storage (`reportfix/state.json`), not a file on the Vercel machine. Reset replaces that object with the seed (admin, six staff, three students, two sample issues).
 
+## Branding and animation
+
+Logo and campus photos are served from `public/brand/`:
+
+- `mcs-logo.png`
+- `mcs-1.jpg`, `mcs-2.jpg`, `mcs-3.jpg`
+
+Replace those files to change the crest or the hero photos. The palette is the crest red and gold in `src/app/globals.css` (`--brand`, `--brand-soft`, `--accent`).
+
+Animations turn off when the operating system asks for reduced motion. The first-visit splash is skipped in that case too.
+
 ## Known limits
 
 - Grouping uses the problem category plus the canonical location, not a second model call.
