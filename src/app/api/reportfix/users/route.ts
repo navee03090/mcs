@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createStudent, ensureSeeded, listProfiles } from "@/lib/reportfix/store";
+import { createStudent, ensureSeeded, listProfiles, noteSignIn } from "@/lib/reportfix/store";
 
 export async function GET() {
   try {
@@ -17,8 +17,20 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await ensureSeeded();
-    const body = (await request.json()) as { name?: string };
-    const user = await createStudent(body.name ?? "");
+    const body = (await request.json()) as {
+      name?: string;
+      rollNumber?: string;
+      action?: string;
+      userId?: string;
+    };
+    if (body.action === "sign-in") {
+      if (!body.userId) {
+        return NextResponse.json({ ok: false, error: "userId required" }, { status: 400 });
+      }
+      const user = await noteSignIn(body.userId);
+      return NextResponse.json({ ok: true, user });
+    }
+    const user = await createStudent(body.name ?? "", body.rollNumber);
     return NextResponse.json({ ok: true, user });
   } catch (error) {
     return NextResponse.json(

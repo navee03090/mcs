@@ -26,6 +26,8 @@ export type Profile = {
   trust_score: number;
   trust_reason: string;
   created_at: string;
+  roll_number?: string | null;
+  last_seen_at?: string | null;
 };
 
 export type CampusLocation = {

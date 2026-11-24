@@ -70,7 +70,7 @@ export async function listLedger(profileId?: string) {
   return state.trust_events.filter((e) => !profileId || e.profile_id === profileId);
 }
 
-export async function createStudent(name: string) {
+export async function createStudent(name: string, rollNumber?: string) {
   return withState((state) => {
     const profile: Profile = {
       id: randomUUID(),
@@ -80,6 +80,8 @@ export async function createStudent(name: string) {
       trust_score: 50,
       trust_reason: "New account — base trust 50",
       created_at: new Date().toISOString(),
+      roll_number: rollNumber?.trim() || null,
+      last_seen_at: new Date().toISOString(),
     };
     state.profiles.push(profile);
     state.trust_events.unshift({
@@ -90,6 +92,15 @@ export async function createStudent(name: string) {
       issue_id: null,
       created_at: profile.created_at,
     });
+    return profile;
+  });
+}
+
+export async function noteSignIn(userId: string) {
+  return withState((state) => {
+    const profile = state.profiles.find((item) => item.id === userId);
+    if (!profile) throw new Error("Unknown user");
+    profile.last_seen_at = new Date().toISOString();
     return profile;
   });
 }

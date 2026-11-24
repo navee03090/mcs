@@ -1,34 +1,19 @@
 ﻿"use client";
 
 import { useReducedMotion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminDesk } from "@/components/desks/admin-desk";
+import { StaffDesk } from "@/components/desks/staff-desk";
+import { StudentDesk } from "@/components/desks/student-desk";
+import type { Board, DeskProps } from "@/components/desks/types";
 import { ReportFixView } from "@/components/reportfix-view";
-import type {
-  CampusLocation,
-  Issue,
-  IssueStatus,
-  Profile,
-  Report,
-  TrustEvent,
-} from "@/lib/reportfix/types";
+import { deskPath, loginPath, type Desk } from "@/lib/portal";
+import { clearSession, readSession } from "@/lib/session";
+import type { IssueStatus, Profile, Report } from "@/lib/reportfix/types";
 
-type Board = {
-  viewer: Profile;
-  issues: Issue[];
-  reports: Report[];
-  locations: CampusLocation[];
-  ledger: TrustEvent[];
-  confidential: Issue[];
-};
-
-const STATUS_OPTIONS: IssueStatus[] = [
-  "open",
-  "in_progress",
-  "resolved",
-  "reopened",
-];
-
-export function ReportFixApp() {
+export function ReportFixApp({ desk }: { desk: Desk }) {
+  const router = useRouter();
   const [users, setUsers] = useState<Profile[]>([]);
   const [userId, setUserId] = useState("");
   const [board, setBoard] = useState<Board | null>(null);
@@ -40,9 +25,15 @@ export function ReportFixApp() {
   const [newName, setNewName] = useState("");
   const [locationId, setLocationId] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+  const [gate, setGate] = useState<"wait" | "open">(desk === "judge" ? "open" : "wait");
   const reduced = useReducedMotion();
 
-  const viewer = board?.viewer ?? users.find((u) => u.id === userId) ?? null;
+  const viewer = board?.viewer ?? users.find((user) => user.id === userId) ?? null;
+
+  const signOut = useCallback(() => {
+    clearSession();
+    router.push("/");
+  }, [router]);
 
   useEffect(() => {
     if (!msg) return;
@@ -62,8 +53,7 @@ export function ReportFixApp() {
     }
     setSetupError(null);
     setUsers(data.users);
-    if (!userId && data.users[0]) setUserId(data.users[0].id);
-  }, [userId]);
+  }, []);
 
   const loadBoard = useCallback(async (id: string) => {
     const res = await fetch(`/api/reportfix/issues?userId=${id}`);
@@ -75,12 +65,42 @@ export function ReportFixApp() {
     setBoard({
       viewer: data.viewer,
       issues: data.issues,
-      reports: (data.reports ?? []).filter((r: Report) => !r.is_confidential),
+      reports: (data.reports ?? []).filter((report: Report) => !report.is_confidential),
       locations: data.locations ?? [],
       ledger: data.ledger ?? [],
       confidential: data.confidential ?? [],
     });
   }, []);
+
+  useEffect(() => {
+    void loadUsers();
+  }, [loadUsers]);
+
+  useEffect(() => {
+    if (desk !== "judge") return;
+    if (!userId && users[0]) setUserId(users[0].id);
+  }, [desk, userId, users]);
+
+  useEffect(() => {
+    if (desk === "judge" || users.length === 0) return;
+    const session = readSession();
+    if (!session) {
+      router.replace(loginPath(desk));
+      return;
+    }
+    const person = users.find((user) => user.id === session);
+    if (!person) {
+      clearSession();
+      router.replace(loginPath(desk));
+      return;
+    }
+    if (deskPath(person.role) !== `/${desk}`) {
+      router.replace(deskPath(person.role));
+      return;
+    }
+    if (userId !== session) setUserId(session);
+    setGate("open");
+  }, [desk, users, userId, router]);
 
   useEffect(() => {
     if (!userId) return;
@@ -89,16 +109,12 @@ export function ReportFixApp() {
   }, [userId, loadBoard]);
 
   useEffect(() => {
-    void loadUsers();
-  }, [loadUsers]);
-
-  useEffect(() => {
     if (userId) void loadBoard(userId);
   }, [userId, loadBoard]);
 
   const trending = useMemo(() => {
     return [...(board?.issues ?? [])]
-      .filter((i) => !i.is_confidential)
+      .filter((issue) => !issue.is_confidential)
       .sort((a, b) => b.crowd_weight - a.crowd_weight)
       .slice(0, 5);
   }, [board]);
@@ -252,18 +268,14 @@ export function ReportFixApp() {
   if (setupError) {
     return (
       <main className="mx-auto max-w-3xl space-y-4 px-4 py-10">
-        <h1 className="text-2xl font-bold">ReportFix setup</h1>
+        <h1 className="font-display text-3xl">ReportFix setup</h1>
         <pre className="whitespace-pre-wrap rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
           {setupError}
         </pre>
-        <p className="text-sm text-zinc-600">
-          File to run: <code>supabase/schema.sql</code> in Supabase SQL Editor
-          for project <code>hprppvnwjwstlksmazho</code>.
-        </p>
         <button
           type="button"
           onClick={() => void bootstrap()}
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white"
+          className="rounded-full bg-[#140c0c] px-4 py-2 text-sm text-white"
           disabled={busy}
         >
           Retry connection
@@ -272,34 +284,71 @@ export function ReportFixApp() {
     );
   }
 
-  return (
-    <ReportFixView
-      users={users}
-      userId={userId}
-      setUserId={setUserId}
-      board={board}
-      viewer={viewer}
-      text={text}
-      setText={setText}
-      busy={busy}
-      msg={msg}
-      summary={summary}
-      newName={newName}
-      setNewName={setNewName}
-      locationId={locationId}
-      setLocationId={setLocationId}
-      toast={toast}
-      reduced={reduced}
-      trending={trending}
-      needsPlace={needsPlace}
-      showTriage={showTriage}
-      resetData={() => void resetData()}
-      createUser={() => void createUser()}
-      submit={() => void submit()}
-      staffAction={(id, action) => void staffAction(id, action)}
-      setStatus={(id, status) => void setStatus(id, status)}
-      vote={(id, choice) => void vote(id, choice)}
-      loadSummary={() => void loadSummary()}
-    />
-  );
+  if (desk === "judge") {
+    return (
+      <ReportFixView
+        users={users}
+        userId={userId}
+        setUserId={setUserId}
+        board={board}
+        viewer={viewer}
+        text={text}
+        setText={setText}
+        busy={busy}
+        msg={msg}
+        summary={summary}
+        newName={newName}
+        setNewName={setNewName}
+        locationId={locationId}
+        setLocationId={setLocationId}
+        toast={toast}
+        reduced={reduced}
+        trending={trending}
+        needsPlace={needsPlace}
+        showTriage={showTriage}
+        resetData={() => void resetData()}
+        createUser={() => void createUser()}
+        submit={() => void submit()}
+        staffAction={(id, action) => void staffAction(id, action)}
+        setStatus={(id, status) => void setStatus(id, status)}
+        vote={(id, choice) => void vote(id, choice)}
+        loadSummary={() => void loadSummary()}
+      />
+    );
+  }
+
+  if (gate !== "open" || !viewer) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[var(--background)] text-sm text-zinc-600">
+        Opening your desk…
+      </main>
+    );
+  }
+
+  const shared: DeskProps = {
+    board,
+    viewer,
+    text,
+    setText,
+    busy,
+    msg,
+    summary,
+    locationId,
+    setLocationId,
+    toast,
+    reduced,
+    trending,
+    needsPlace,
+    showTriage,
+    submit: () => void submit(),
+    staffAction: (id, action) => void staffAction(id, action),
+    setStatus: (id, status) => void setStatus(id, status),
+    vote: (id, choice) => void vote(id, choice),
+    loadSummary: () => void loadSummary(),
+    signOut,
+  };
+
+  if (desk === "staff") return <StaffDesk {...shared} />;
+  if (desk === "admin") return <AdminDesk {...shared} />;
+  return <StudentDesk {...shared} />;
 }

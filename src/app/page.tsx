@@ -1,5 +1,5 @@
-import { ReportFixApp } from "@/components/reportfix-app";
+import { HomeGate } from "@/components/portal/home-gate";
 
 export default function Home() {
-  return <ReportFixApp />;
+  return <HomeGate />;
 }

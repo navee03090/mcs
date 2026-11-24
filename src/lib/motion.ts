@@ -1,3 +1,16 @@
+"use client";
+
+import { useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
+
+/** True until the client knows the user's motion preference, so server and client markup match. */
+export function useCalmMotion() {
+  const reduced = useReducedMotion();
+  const [ready, setReady] = useState(false);
+  useEffect(() => setReady(true), []);
+  return !ready || Boolean(reduced);
+}
+
 export const duration = {
   fast: 0.18,
   base: 0.35,

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import { CampusHero } from "@/components/brand/CampusHero";
 import { McsMark } from "@/components/brand/McsMark";
 import { Splash } from "@/components/brand/Splash";
@@ -103,7 +104,7 @@ export function ReportFixView(props: {
       <Splash />
       <Toast message={toast} />
       <header className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <McsMark size={44} priority />
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand)]">
@@ -111,7 +112,7 @@ export function ReportFixView(props: {
             </p>
             <p className="text-sm font-semibold">ReportFix</p>
           </div>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={resetData}
