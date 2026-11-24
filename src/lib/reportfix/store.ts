@@ -76,7 +76,13 @@ export async function listLedger(profileId?: string) {
   return state.trust_events.filter((e) => !profileId || e.profile_id === profileId);
 }
 
-export async function createStudent(name: string, rollNumber?: string, department?: string) {
+export async function createStudent(
+  name: string,
+  rollNumber?: string,
+  department?: string,
+  cmsId?: string,
+) {
+  const cms = (cmsId || rollNumber)?.trim() || null;
   return withState((state) => {
     const profile: Profile = {
       id: randomUUID(),
@@ -86,7 +92,8 @@ export async function createStudent(name: string, rollNumber?: string, departmen
       trust_score: 50,
       trust_reason: "New account — base trust 50",
       created_at: new Date().toISOString(),
-      roll_number: rollNumber?.trim() || null,
+      roll_number: cms,
+      cms_id: cms,
       last_seen_at: new Date().toISOString(),
     };
     state.profiles.push(profile);
@@ -99,6 +106,19 @@ export async function createStudent(name: string, rollNumber?: string, departmen
       created_at: profile.created_at,
     });
     return profile;
+  });
+}
+
+export async function removeStudent(adminId: string, studentId: string) {
+  return withState((state) => {
+    const admin = state.profiles.find((profile) => profile.id === adminId);
+    if (!admin || admin.role !== "admin") throw new Error("Only admin can remove a student");
+    const student = state.profiles.find((profile) => profile.id === studentId);
+    if (!student || student.role !== "student") {
+      throw new Error("Only a student account can be removed");
+    }
+    state.profiles = state.profiles.filter((profile) => profile.id !== studentId);
+    return { id: student.id, name: student.name };
   });
 }
 

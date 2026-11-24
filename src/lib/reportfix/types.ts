@@ -27,6 +27,7 @@ export type Profile = {
   trust_reason: string;
   created_at: string;
   roll_number?: string | null;
+  cms_id?: string | null;
   last_seen_at?: string | null;
 };
 

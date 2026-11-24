@@ -108,6 +108,10 @@ export function RoleLogin({ role }: { role: Role }) {
       setError("Enter your name.");
       return;
     }
+    if (!roll.trim()) {
+      setError("Enter the CMS ID.");
+      return;
+    }
     if (!home) {
       setError("Choose EE, CSE, or IS.");
       return;
@@ -117,7 +121,7 @@ export function RoleLogin({ role }: { role: Role }) {
     const res = await fetch("/api/reportfix/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), rollNumber: roll.trim(), department: home }),
+      body: JSON.stringify({ name: name.trim(), cmsId: roll.trim(), department: home }),
     });
     const data = (await res.json()) as { ok?: boolean; error?: string; user?: Profile };
     setBusy(false);
@@ -214,8 +218,8 @@ export function RoleLogin({ role }: { role: Role }) {
                       ? user.department
                       : role === "student"
                         ? "Choose a department"
-                        : "Trust"}{" "}
-                    · {user.trust_score}
+                        : "Trust"}
+                    {user.cms_id || user.roll_number ? ` · CMS ${user.cms_id || user.roll_number}` : ""} · {user.trust_score}
                   </span>
                 </span>
                 <span className="text-sm font-semibold text-[var(--brand)]">Enter</span>
@@ -259,7 +263,8 @@ export function RoleLogin({ role }: { role: Role }) {
             />
             <input
               className="w-full rounded-xl border border-black/10 bg-white px-3 py-2 text-sm"
-              placeholder="Roll number"
+              placeholder="CMS ID"
+              required
               value={roll}
               onChange={(event) => setRoll(event.target.value)}
             />

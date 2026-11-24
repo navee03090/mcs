@@ -58,7 +58,7 @@ export function DeskFrame({
             <p className="text-zinc-500">
               {ROLE_LABEL[viewer.role]}
               {viewer.department ? ` · ${viewer.department}` : ""}
-              {viewer.roll_number ? ` · ${viewer.roll_number}` : ""}
+              {viewer.cms_id || viewer.roll_number ? ` · CMS ${viewer.cms_id || viewer.roll_number}` : ""}
             </p>
             {seen && <p className="text-zinc-400">Signed in {seen}</p>}
           </div>

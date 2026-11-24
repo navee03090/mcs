@@ -39,6 +39,8 @@ export function IssueCard({
   onStatus,
   onStaff,
   onVote,
+  filedBy,
+  staffName,
 }: {
   issue: Issue;
   viewer: Profile;
@@ -48,6 +50,8 @@ export function IssueCard({
   onStatus: (issueId: string, status: IssueStatus) => void;
   onStaff: (issueId: string, action: "spam" | "close_window") => void;
   onVote: (issueId: string, vote: "confirm" | "dispute") => void;
+  filedBy?: string;
+  staffName?: string;
 }) {
   const affected = issue.is_confidential || issue.reporter_ids.includes(viewer.id);
   const canVote =
@@ -76,6 +80,12 @@ export function IssueCard({
               {liveLabel(issue)}
             </span>
           </div>
+          {filedBy && (
+            <p className="mt-1 text-xs font-semibold text-[#140c0c]">
+              Filed by {filedBy}
+              {staffName ? ` · ${staffName}` : ""}
+            </p>
+          )}
           {issue.priority_explanation && (
             <p className="mt-1 text-xs font-medium text-[#140c0c]">{issue.priority_explanation}</p>
           )}

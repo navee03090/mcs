@@ -136,7 +136,11 @@ export async function loadState(): Promise<AppState> {
 
 function hydrate(raw: AppState): AppState {
   return {
-    profiles: raw.profiles ?? [],
+    profiles: (raw.profiles ?? []).map((profile) => ({
+      ...profile,
+      cms_id: profile.cms_id ?? profile.roll_number ?? null,
+      roll_number: profile.roll_number ?? profile.cms_id ?? null,
+    })),
     locations: raw.locations ?? [],
     votes: raw.votes ?? [],
     reports: (raw.reports ?? []).map((report) => ({

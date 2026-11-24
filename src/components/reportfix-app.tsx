@@ -150,6 +150,21 @@ export function ReportFixApp({ desk }: { desk: Desk }) {
     if (userId) await loadBoard(userId);
   }
 
+  async function removeStudent(studentId: string) {
+    if (!userId) return;
+    setBusy(true);
+    const res = await fetch("/api/reportfix/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "remove-student", userId, studentId }),
+    });
+    const data = await res.json();
+    setBusy(false);
+    setMsg(data.ok ? `Removed ${data.removed.name}` : data.error);
+    await loadUsers();
+    await loadBoard(userId);
+  }
+
   async function createUser() {
     setBusy(true);
     const res = await fetch("/api/reportfix/users", {
@@ -351,6 +366,6 @@ export function ReportFixApp({ desk }: { desk: Desk }) {
   };
 
   if (desk === "staff") return <StaffDesk {...shared} />;
-  if (desk === "admin") return <AdminDesk {...shared} />;
+  if (desk === "admin") return <AdminDesk {...shared} people={users} onRemoveStudent={(id) => void removeStudent(id)} />;
   return <StudentDesk {...shared} />;
 }
