@@ -13,9 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodeQuest AI · Shell",
-  description:
-    "Empty Next.js + Supabase + Vercel starter for CodeQuest 2026 AI Hackathon",
+  title: "ReportFix · CodeQuest 2026",
+  description: "Campus issue reporting with AI triage — CodeQuest AI Hackathon",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -24,9 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-zinc-50 text-zinc-950 dark:bg-black dark:text-zinc-50">
-        {children}
-      </body>
+      <body className="min-h-full bg-white text-zinc-950">{children}</body>
     </html>
   );
 }
