@@ -236,7 +236,7 @@ export function ReportFixView(props: {
               )}
               <button
                 type="button"
-                onClick={submit}
+                onClick={() => submit()}
                 disabled={busy || !text.trim()}
                 className="btn mt-3 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >

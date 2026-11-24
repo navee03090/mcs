@@ -92,7 +92,7 @@ export function StudentDesk(props: DeskProps) {
             )}
             <button
               type="button"
-              onClick={props.submit}
+              onClick={() => props.submit()}
               disabled={props.busy || !props.text.trim()}
               className="btn mt-3 rounded-full bg-[var(--brand)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
             >
